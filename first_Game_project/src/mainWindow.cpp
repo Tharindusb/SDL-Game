@@ -25,6 +25,7 @@ SDL_Surface* gHelloWorld = NULL;
 SDL_Surface* loadSurface(std::string path);
 SDL_Surface* gKeyPressSurfaces[KEY_PRESS_SURFACE_TOTAL];
 SDL_Surface* gCurrentSurface = NULL;
+SDL_Surface* gStrechedSufrace = NULL;
 
 
 
@@ -42,7 +43,11 @@ int main(int argc, char* args[])
 		}
 		else
 		{
-			
+			SDL_Rect strechRect;
+			strechRect.x = 0;
+			strechRect.y = 0;
+			strechRect.w = SCREEN_WIDTH;
+			strechRect.h = SCREEN_HEIGHT;
 			SDL_Event e;
 			bool quit = false;
 			gCurrentSurface = gKeyPressSurfaces[KEY_PRESS_SURFACE_DEFAULT];
@@ -80,6 +85,7 @@ int main(int argc, char* args[])
 						}
 					}
 				}
+				SDL_BlitScaled(gStrechedSufrace, NULL, gScreenSurface, NULL);
 				SDL_BlitSurface(gCurrentSurface, NULL, gScreenSurface, NULL);
 				SDL_UpdateWindowSurface(gWindow);
 			}
@@ -160,12 +166,23 @@ bool loadMedia()
 
 SDL_Surface* loadSurface(std::string path)
 {
+	SDL_Surface* optimizedSurface = NULL;
 	SDL_Surface* loadSurface = SDL_LoadBMP(path.c_str());
 	if(loadSurface==NULL)
 	{
 		printf("Unable to load image %s! SDL Error: %s\n", path.c_str(), SDL_GetError());
 	}
-	return loadSurface;
+	else
+	{
+		optimizedSurface = SDL_ConvertSurface(loadSurface, gScreenSurface->format, 0);
+		if (optimizedSurface == NULL)
+		{
+			printf("Unable to optimize image %s! SDL Error: %s\n", path.c_str(), SDL_GetError());
+		}
+		//Get rid of old loaded surface
+		SDL_FreeSurface(loadSurface);
+	}
+	return optimizedSurface;
 }
 
 void close() 
